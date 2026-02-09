@@ -1,188 +1,432 @@
-#!/usr/bin/bash
+#!/bin/bash
 
-# Enhanced Basic Math Calculator using Bash System Language
-source ./lib.sh
+# Basic Math Calculator
+# A demonstration of the Bash System Language framework
 
 # Import required modules
+source lib.sh
+
+import core.system
 import math.basic
 import string
 import ui
-import core.system
+import io
 
-# Main calculator function
-calculator_main() {
-    header "Basic Math Calculator" 60 "primary"
+# Calculator state
+declare -a CALC_HISTORY=()
+declare -i CALC_HISTORY_INDEX=0
+declare -i CALC_HISTORY_MAX=100
+declare -i CALC_PRECISION=2
+
+# Calculator functions
+calc_add() {
+    local a="$1"
+    local b="$2"
     
-    # Get first number with validation
-    local num1
-    while true; do
-        num1=$(themed_prompt "Enter the first number")
-        if string.is_numeric "$num1"; then
-            success "First number: $num1"
-            break
-        else
-            error_msg "Invalid input. Please enter a valid number."
-        fi
-    done
+    if ! is_number "$a" || ! is_number "$b"; then
+        error "Both arguments must be numbers"
+        return ${EXIT_FAILURE:-1}
+    fi
     
-    # Get second number with validation
-    local num2
-    while true; do
-        num2=$(themed_prompt "Enter the second number")
-        if string.is_numeric "$num2"; then
-            success "Second number: $num2"
-            break
-        else
-            error_msg "Invalid input. Please enter a valid number."
-        fi
-    done
+    local result=$(add "$a" "$b")
+    echo "$result"
+}
+
+calc_sub() {
+    local a="$1"
+    local b="$2"
     
-    separator "─" 60 "accent"
+    if ! is_number "$a" || ! is_number "$b"; then
+        error "Both arguments must be numbers"
+        return ${EXIT_FAILURE:-1}
+    fi
     
-    # Display available operations
-    local operations=("Addition (+)" "Subtraction (-)" "Multiplication (*)" "Division (/)" "Square" "Cube" "Power (^)" "Exit")
+    local result=$(sub "$a" "$b")
+    echo "$result"
+}
+
+calc_mul() {
+    local a="$1"
+    local b="$2"
     
-    local choice
-    choice=$(themed_menu "Choose an operation" "${operations[@]}")
+    if ! is_number "$a" || ! is_number "$b"; then
+        error "Both arguments must be numbers"
+        return ${EXIT_FAILURE:-1}
+    fi
     
-    local result
-    local operation_name
+    local result=$(mul "$a" "$b")
+    echo "$result"
+}
+
+calc_div() {
+    local a="$1"
+    local b="$2"
     
-    case "$choice" in
-        "Addition (+)")
-            result=$(math.basic.add "$num1" "$num2")
-            operation_name="Addition"
-            ;;
-        "Subtraction (-)")
-            result=$(math.basic.subtract "$num1" "$num2")
-            operation_name="Subtraction"
-            ;;
-        "Multiplication (*)")
-            result=$(math.basic.multiply "$num1" "$num2")
-            operation_name="Multiplication"
-            ;;
-        "Division (/)")
-            if math.basic.equal "$num2" "0"; then
-                error_msg "Division by zero is not allowed."
-                return 1
-            else
-                result=$(math.basic.divide "$num1" "$num2")
-                operation_name="Division"
-            fi
-            ;;
-        "Square")
-            local square_choice
-            square_choice=$(themed_menu "Square which number?" "First number ($num1)" "Second number ($num2)")
-            if [[ "$square_choice" == "First number ($num1)" ]]; then
-                result=$(math.basic.power "$num1" "2")
-                operation_name="Square of $num1"
-            else
-                result=$(math.basic.power "$num2" "2")
-                operation_name="Square of $num2"
-            fi
-            ;;
-        "Cube")
-            local cube_choice
-            cube_choice=$(themed_menu "Cube which number?" "First number ($num1)" "Second number ($num2)")
-            if [[ "$cube_choice" == "First number ($num1)" ]]; then
-                result=$(math.basic.power "$num1" "3")
-                operation_name="Cube of $num1"
-            else
-                result=$(math.basic.power "$num2" "3")
-                operation_name="Cube of $num2"
-            fi
-            ;;
-        "Power (^)")
-            local power_base=$(themed_prompt "Enter base number" "$num1")
-            local power_exp=$(themed_prompt "Enter exponent" "$num2")
-            result=$(math.basic.power "$power_base" "$power_exp")
-            operation_name="Power ($power_base^$power_exp)"
-            ;;
-        "Exit")
-            info_msg "Calculator session ended."
-            return 0
-            ;;
-        *)
-            error_msg "Invalid operation selected."
-            return 1
-            ;;
-    esac
+    if ! is_number "$a" || ! is_number "$b"; then
+        error "Both arguments must be numbers"
+        return ${EXIT_FAILURE:-1}
+    fi
     
-    # Display result with enhanced formatting
-    separator "═" 60 "success"
-    box "Result: $result" 50 "success"
-    printc "success" "bold" "$operation_name completed successfully!"
-    separator "═" 60 "success"
+    if [[ "$b" -eq 0 ]]; then
+        error "Division by zero is not allowed"
+        return ${EXIT_FAILURE:-1}
+    fi
     
-    # Ask if user wants to continue
-    if themed_confirm "Do you want to perform another calculation?" "y"; then
-        calculator_main
+    local result=$(div "$a" "$b")
+    echo "$result"
+}
+
+calc_mod() {
+    local a="$1"
+    local b="$2"
+    
+    if ! is_number "$a" || ! is_number "$b"; then
+        error "Both arguments must be numbers"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    if [[ "$b" -eq 0 ]]; then
+        error "Modulo by zero is not allowed"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    local result=$(mod "$a" "$b")
+    echo "$result"
+}
+
+calc_pow() {
+    local base="$1"
+    local exp="$2"
+    
+    if ! is_number "$base" || ! is_number "$exp"; then
+        error "Both arguments must be numbers"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    if [[ "$exp" -lt 0 ]]; then
+        error "Negative exponents are not supported"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    local result=$(pow "$base" "$exp")
+    echo "$result"
+}
+
+calc_sqrt() {
+    local num="$1"
+    
+    if ! is_number "$num"; then
+        error "Argument must be a number"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    if [[ "$num" -lt 0 ]]; then
+        error "Square root of negative number is not supported"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    local result=$(sqrt_int "$num")
+    echo "$result"
+}
+
+calc_factorial() {
+    local n="$1"
+    
+    if ! is_number "$n"; then
+        error "Argument must be a number"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    if [[ "$n" -lt 0 ]]; then
+        error "Factorial of negative number is not supported"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    local result=$(fact "$n")
+    echo "$result"
+}
+
+calc_gcd() {
+    local a="$1"
+    local b="$2"
+    
+    if ! is_number "$a" || ! is_number "$b"; then
+        error "Both arguments must be numbers"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    local result=$(gcd "$a" "$b")
+    echo "$result"
+}
+
+calc_lcm() {
+    local a="$1"
+    local b="$2"
+    
+    if ! is_number "$a" || ! is_number "$b"; then
+        error "Both arguments must be numbers"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    local result=$(lcm "$a" "$b")
+    echo "$result"
+}
+
+calc_is_prime() {
+    local num="$1"
+    
+    if ! is_number "$num"; then
+        error "Argument must be a number"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    if is_prime "$num"; then
+        echo "true"
     else
-        info_msg "Thank you for using the calculator!"
+        echo "false"
     fi
 }
 
-# Additional utility functions
-display_history() {
-    local history_file="$HOME/.calc_history"
-    if [[ -f "$history_file" ]]; then
-        header "Calculation History" 60 "info"
-        cat "$history_file"
-        separator "─" 60 "info"
-    else
-        warning "No history found."
+calc_fib() {
+    local n="$1"
+    
+    if ! is_number "$n"; then
+        error "Argument must be a number"
+        return ${EXIT_FAILURE:-1}
     fi
+    
+    if [[ "$n" -lt 0 ]]; then
+        error "Fibonacci sequence index must be non-negative"
+        return ${EXIT_FAILURE:-1}
+    fi
+    
+    local result=$(fib_n "$n")
+    echo "$result"
 }
 
-save_to_history() {
+# History management
+add_to_history() {
     local expression="$1"
     local result="$2"
-    local history_file="$HOME/.calc_history"
-    local timestamp
-    timestamp=$(date "+%Y-%m-%d %H:%M:%S")
     
-    echo "[$timestamp] $expression = $result" >> "$history_file"
+    CALC_HISTORY[$CALC_HISTORY_INDEX]="$expression = $result"
+    ((CALC_HISTORY_INDEX++))
+    
+    # Keep history within limits
+    if [[ $CALC_HISTORY_INDEX -ge $CALC_HISTORY_MAX ]]; then
+        # Remove oldest entry
+        unset CALC_HISTORY[0]
+        # Shift array
+        local -a temp_history=("${CALC_HISTORY[@]}")
+        CALC_HISTORY=()
+        for ((i=1; i<${#temp_history[@]}; i++)); do
+            CALC_HISTORY[$((i-1))]="${temp_history[$i]}"
+        done
+        ((CALC_HISTORY_INDEX--))
+    fi
 }
 
-# Enhanced calculator with history
-enhanced_calculator() {
-    # Set a nice theme
-    ui.set_theme "neon"
+show_history() {
+    if [[ $CALC_HISTORY_INDEX -eq 0 ]]; then
+        echo "No calculation history yet"
+        return
+    fi
     
-    header "Enhanced Bash Calculator" 80 "primary"
-    info_msg "Welcome to the Enhanced Bash Calculator!"
-    info_msg "This calculator uses the Bash System Language framework."
+    echo "Calculation History:"
+    echo "==================="
+    
+    for ((i=0; i<CALC_HISTORY_INDEX; i++)); do
+        local entry="${CALC_HISTORY[$i]}"
+        local expr="${entry%%=*}"
+        local result="${entry#*=}"
+        printf "%3d: %s = %s\n" $((i+1)) "$expr" "$result"
+    done
+}
+
+clear_history() {
+    CALC_HISTORY=()
+    CALC_HISTORY_INDEX=0
+    echo "History cleared"
+}
+
+# Expression evaluator
+evaluate_expression() {
+    local expression="$1"
+    
+    # Remove whitespace
+    expression=$(echo "$expression" | tr -d ' ')
+    
+    # Handle basic operations
+    if [[ "$expression" =~ ^(.+)\+(.+)$ ]]; then
+        local a="${BASH_REMATCH[1]}"
+        local b="${BASH_REMATCH[2]}"
+        calc_add "$a" "$b"
+    elif [[ "$expression" =~ ^(.+)\-(.+)$ ]]; then
+        local a="${BASH_REMATCH[1]}"
+        local b="${BASH_REMATCH[2]}"
+        calc_sub "$a" "$b"
+    elif [[ "$expression" =~ ^(.+)\*(.+)$ ]]; then
+        local a="${BASH_REMATCH[1]}"
+        local b="${BASH_REMATCH[2]}"
+        calc_mul "$a" "$b"
+    elif [[ "$expression" =~ ^(.+)/(.+)$ ]]; then
+        local a="${BASH_REMATCH[1]}"
+        local b="${BASH_REMATCH[2]}"
+        calc_div "$a" "$b"
+    elif [[ "$expression" =~ ^(.+)\%(.+)$ ]]; then
+        local a="${BASH_REMATCH[1]}"
+        local b="${BASH_REMATCH[2]}"
+        calc_mod "$a" "$b"
+    elif [[ "$expression" =~ ^(.+)\^(.+)$ ]]; then
+        local base="${BASH_REMATCH[1]}"
+        local exp="${BASH_REMATCH[2]}"
+        calc_pow "$base" "$exp"
+    elif [[ "$expression" =~ ^sqrt\((.+)\)$ ]]; then
+        local num="${BASH_REMATCH[1]}"
+        calc_sqrt "$num"
+    elif [[ "$expression" =~ ^factorial\((.+)\)$ ]]; then
+        local n="${BASH_REMATCH[1]}"
+        calc_factorial "$n"
+    elif [[ "$expression" =~ ^gcd\((.+),(.+)\)$ ]]; then
+        local a="${BASH_REMATCH[1]}"
+        local b="${BASH_REMATCH[2]}"
+        calc_gcd "$a" "$b"
+    elif [[ "$expression" =~ ^lcm\((.+),(.+)\)$ ]]; then
+        local a="${BASH_REMATCH[1]}"
+        local b="${BASH_REMATCH[2]}"
+        calc_lcm "$a" "$b"
+    elif [[ "$expression" =~ ^is_prime\((.+)\)$ ]]; then
+        local num="${BASH_REMATCH[1]}"
+        calc_is_prime "$num"
+    elif [[ "$expression" =~ ^fib\((.+)\)$ ]]; then
+        local n="${BASH_REMATCH[1]}"
+        calc_fib "$n"
+    else
+        # Try to evaluate as a simple number
+        if is_number "$expression"; then
+            echo "$expression"
+        else
+            error "Invalid expression: $expression"
+            return ${EXIT_FAILURE:-1}
+        fi
+    fi
+}
+
+# Interactive calculator
+interactive_calculator() {
+    echo "Basic Math Calculator"
+    echo "===================="
+    echo "Enter 'help' for available commands"
+    echo "Enter 'quit' to exit"
     echo
     
-    local main_options=("Start Calculator" "View History" "Change Theme" "Exit")
+    while true; do
+        echo -n "calc> "
+        read -r input
+        
+        case "$input" in
+            "quit"|"exit"|"q")
+                echo "Goodbye!"
+                break
+                ;;
+            "help"|"h")
+                show_help
+                ;;
+            "history"|"hist"|"!")
+                show_history
+                ;;
+            "clear"|"c")
+                clear_history
+                ;;
+            ""|*)
+                if [[ -n "$input" ]]; then
+                    local result
+                    if result=$(evaluate_expression "$input" 2>/dev/null); then
+                        echo "Result: $result"
+                        add_to_history "$input" "$result"
+                    else
+                        echo "Error: Invalid expression or calculation failed"
+                    fi
+                fi
+                ;;
+        esac
+    done
+}
+
+# Help system
+show_help() {
+    echo "Available Commands:"
+    echo "==================="
+    echo "Basic Operations:"
+    echo "  5 + 3          - Addition"
+    echo "  10 - 4         - Subtraction"
+    echo "  6 * 7          - Multiplication"
+    echo "  15 / 3         - Division"
+    echo "  10 % 3         - Modulo"
+    echo "  2 ^ 8          - Power"
+    echo ""
+    echo "Advanced Functions:"
+    echo "  sqrt(16)       - Square root"
+    echo "  factorial(5)   - Factorial"
+    echo "  gcd(12, 8)    - Greatest common divisor"
+    echo "  lcm(6, 8)     - Least common multiple"
+    echo "  is_prime(7)   - Check if number is prime"
+    echo "  fib(10)        - Fibonacci number"
+    echo ""
+    echo "Other Commands:"
+    echo "  help           - Show this help"
+    echo "  history        - Show calculation history"
+    echo "  clear          - Clear history"
+    echo "  quit           - Exit calculator"
+    echo ""
+    echo "Examples:"
+    echo "  calc> 2 + 3"
+    echo "  Result: 5"
+    echo "  calc> sqrt(16)"
+    echo "  Result: 4"
+    echo "  calc> factorial(5)"
+    echo "  Result: 120"
+}
+
+# Command line interface
+main() {
+    local command="${1:-interactive}"
     
-    local main_choice
-    main_choice=$(themed_menu "Main Menu" "${main_options[@]}")
-    
-    case "$main_choice" in
-        "Start Calculator")
-            calculator_main
+    case "$command" in
+        "interactive"|"")
+            interactive_calculator
             ;;
-        "View History")
-            display_history
-            enhanced_calculator
+        "eval"|"e")
+            if [[ -z "$2" ]]; then
+                error "Expression required for eval mode"
+                echo "Usage: $0 eval <expression>"
+                return ${EXIT_FAILURE:-1}
+            fi
+            local result
+            if result=$(evaluate_expression "$2"); then
+                echo "$result"
+                return 0
+            else
+                return ${EXIT_FAILURE:-1}
+            fi
             ;;
-        "Change Theme")
-            local themes=("default" "dark" "light" "neon" "retro")
-            local theme_choice
-            theme_choice=$(themed_menu "Select a theme" "${themes[@]}")
-            ui.set_theme "$theme_choice"
-            success "Theme changed to $theme_choice"
-            enhanced_calculator
+        "help"|"h"|"-h"|"--help")
+            show_help
             ;;
-        "Exit")
-            info_msg "Goodbye!"
-            return 0
+        "version"|"v"|"-v"|"--version")
+            echo "Basic Math Calculator v1.0.0"
+            echo "Built with Bash System Language framework"
+            ;;
+        *)
+            error "Unknown command: $command"
+            echo "Usage: $0 [command] [args]"
+            echo "Commands: interactive, eval, help, version"
+            return ${EXIT_FAILURE:-1}
             ;;
     esac
 }
 
-# Run the enhanced calculator
+# Run main function if script is executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    enhanced_calculator "$@"
+    main "$@"
 fi

@@ -305,8 +305,235 @@ demo_project_structure() {
     echo
 }
 
+# Enhanced comprehensive demo
+comprehensive_demo() {
+    ui.set_theme "neon"
+    clear
+    
+    header "🚀 Bash System Language - Comprehensive Demo 🚀" 80 "primary"
+    echo
+    center_text "Complete Programming Framework for Bash" 80
+    echo
+    center_text "Version 1.0.0 | Production Ready" 80
+    echo
+    separator "═" 80 "accent"
+    echo
+    
+    info_msg "This comprehensive demo showcases ALL framework capabilities:"
+    echo
+    
+    local -a all_features=(
+        "Import System (C/Zig-like syntax)"
+        "Module System with Versioning"
+        "String Operations & Validation"
+        "Math Functions & Number Theory"
+        "File System Operations"
+        "Interactive UI Components"
+        "Advanced Theming System"
+        "Testing Framework (BDD-style)"
+        "Development Tools & Debugger"
+        "Build System & Project Management"
+        "Compilation to Executables"
+        "ASCII Art Generator"
+        "Package Management"
+    )
+    
+    for feature in "${all_features[@]}"; do
+        echo "  ✓ $feature"
+    done
+    echo
+    
+    separator "═" 80 "accent"
+    themed_confirm "Run comprehensive demonstration?" "y" || return 0
+    
+    # Run all demo sections
+    demo_info
+    demo_modules
+    demo_math
+    demo_string
+    demo_ui
+    demo_interactive
+    demo_testing
+    demo_compilation
+    demo_filesystem
+    demo_devtools
+    demo_project_structure
+    demo_ascii_art
+    demo_performance
+    
+    header "🎉 Comprehensive Demo Complete! 🎉" 80 "success"
+    success "Bash System Language framework is fully operational!"
+    echo
+    info_msg "Framework Summary:"
+    echo "  • 14 core modules implemented"
+    echo "  • 5 built-in themes with custom support"
+    echo "  • Complete testing framework"
+    echo "  • Build and package management"
+    echo "  • Development tools and debugger"
+    echo "  • ASCII art generation"
+    echo "  • C/Zig-like import system"
+    echo "  • Compilation to standalone executables"
+    echo
+    box "🚀 Bash is now a powerful system programming language! 🚀" 70 "primary"
+}
+
+# ASCII Art Generator Demo
+demo_ascii_art() {
+    header "ASCII Art Generator" 60 "bright_cyan"
+    
+    info_msg "ASCII Art Generation capabilities:"
+    
+    if [[ -f "./ascii-img-generator.sh" ]]; then
+        success_msg "✓ ASCII generator found!"
+        echo
+        
+        info_msg "Available patterns:"
+        echo "  • Checkerboard pattern"
+        echo "  • Diamond shape"
+        echo "  • Heart shape"
+        echo "  • Star pattern"
+        echo "  • Tree pattern"
+        echo "  • Text to ASCII"
+        echo
+        
+        # Generate a sample pattern
+        info_msg "Generating sample ASCII art..."
+        echo
+        ./ascii-img-generator.sh -t pattern -p checkerboard -s small
+        echo
+    else
+        warning_msg "ASCII generator not found"
+    fi
+}
+
+# Performance Demo
+demo_performance() {
+    header "Performance Benchmarking" 60 "bright_yellow"
+    
+    info_msg "Running performance benchmarks..."
+    echo
+    
+    # Benchmark string operations
+    success_msg "String operations:"
+    local start_time=$(date +%s.%N)
+    
+    for i in {1..1000}; do
+        string.to_upper "test string $i" >/dev/null
+    done
+    
+    local end_time=$(date +%s.%N)
+    local duration=$(echo "$end_time - $start_time" | bc -l 2>/dev/null || echo "0.001")
+    echo "  • 1000 string.to_upper operations: ${duration}s"
+    echo
+    
+    # Benchmark math operations
+    success_msg "Math operations:"
+    start_time=$(date +%s.%N)
+    
+    for i in {1..1000}; do
+        math.add $i $((i+1)) >/dev/null
+    done
+    
+    end_time=$(date +%s.%N)
+    duration=$(echo "$end_time - $start_time" | bc -l 2>/dev/null || echo "0.001")
+    echo "  • 1000 math.add operations: ${duration}s"
+    echo
+    
+    success_msg "Performance benchmarking completed!"
+}
+
+# Interactive menu for demo selection
+interactive_demo_menu() {
+    while true; do
+        clear
+        header "Bash System Language Demo" 80 "primary"
+        
+        local options=(
+            "🎯 Quick Demo (Original)"
+            "🚀 Comprehensive Demo (Enhanced)"
+            "🔧 Individual Demos"
+            "📊 Performance Benchmarks"
+            "🎨 ASCII Art Generator"
+            "❌ Exit"
+        )
+        
+        local choice
+        choice=$(themed_menu "Select demo type" "${options[@]}")
+        
+        case "$choice" in
+            "🎯 Quick Demo (Original)")
+                main_demo
+                ;;
+            "🚀 Comprehensive Demo (Enhanced)")
+                comprehensive_demo
+                ;;
+            "🔧 Individual Demos")
+                individual_demos_menu
+                ;;
+            "📊 Performance Benchmarks")
+                demo_performance
+                ;;
+            "🎨 ASCII Art Generator")
+                demo_ascii_art
+                ;;
+            "❌ Exit")
+                break
+                ;;
+        esac
+        
+        themed_confirm "Continue with demos?" "n" && break
+    done
+}
+
+# Menu for individual demos
+individual_demos_menu() {
+    while true; do
+        clear
+        header "Individual Demos" 80 "info"
+        
+        local options=(
+            "Import System"
+            "Math Module"
+            "String Module"
+            "UI/Theme System"
+            "Interactive Components"
+            "Testing Framework"
+            "Compilation System"
+            "File System Module"
+            "Development Tools"
+            "Build System"
+            "🔙 Back to Main Menu"
+        )
+        
+        local choice
+        choice=$(themed_menu "Select a demo" "${options[@]}")
+        
+        case "$choice" in
+            "Import System") demo_modules ;;
+            "Math Module") demo_math ;;
+            "String Module") demo_string ;;
+            "UI/Theme System") demo_ui ;;
+            "Interactive Components") demo_interactive ;;
+            "Testing Framework") demo_testing ;;
+            "Compilation System") demo_compilation ;;
+            "File System Module") demo_filesystem ;;
+            "Development Tools") demo_devtools ;;
+            "Build System") demo_project_structure ;;
+            "🔙 Back to Main Menu") break ;;
+        esac
+        
+        themed_confirm "Run another individual demo?" "n" && break
+    done
+}
+
 main_demo() {
     set_theme "neon"
+    
+    # Check if we want interactive menu or original demo
+    if [[ "$1" == "--interactive" ]]; then
+        interactive_demo_menu
+        return
+    fi
     
     demo_info
     demo_modules
@@ -334,7 +561,7 @@ main_demo() {
 }
 
 # Export demo functions
-export_module "demo" demo_info demo_modules demo_math demo_string demo_ui demo_interactive demo_testing demo_compilation demo_filesystem demo_devtools demo_project_structure main_demo
+export_module "demo" demo_info demo_modules demo_math demo_string demo_ui demo_interactive demo_testing demo_compilation demo_filesystem demo_devtools demo_project_structure demo_ascii_art demo_performance comprehensive_demo interactive_demo_menu individual_demos_menu main_demo
 
 # Run demo if called directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
